@@ -27,11 +27,14 @@ const getMatchIds = async () => {
 const getGold = async (matchId) => {
     config.url = `${url}/matches/${matchId}`;
     let response = await axios(config)
+    const duration = response.data.duration; // seconds
+    const durationInMins = duration / 60;
     const players = response.data.players;
     const radiant = players.filter(player => player.isRadiant);
     const dire = players.filter(player => !player.isRadiant);
     let gold = {};
 
+    // console.log(duration);
     let radiantNc = 0;
     let radiantTotal = 0;
     let direNc = 0;
@@ -59,12 +62,17 @@ const getGold = async (matchId) => {
     total = radiantTotal + direTotal;
 
     gold = {
-        'matchId': matchId,
-        'radiantNc': radiantNc,
-        'radiantTotal': radiantTotal,
-        'direNc': direNc,
-        'direTotal': direTotal,
-        'total': total
+        'Match ID': matchId,
+        'Radiant\'s Total Gold from Neutral Camp': radiantNc,
+        'Radiant\'s Total Gold': radiantTotal,
+        'Dire\'s Total Gold from Neutral Camp': direNc,
+        'Dire\'s Total Gold': direTotal,
+        'Total Gold': total,
+        'Duration in seconds': duration,
+        'Duration in minutes': durationInMins,
+        'Total Gold per minute': total / durationInMins,
+        'Radiant\'s Gold per minute (Neutral Camp)': radiantNc / durationInMins,
+        'Dire\'s Gold per minute (Neutral Camp)': direNc / durationInMins,
     }
     return gold;
 }
@@ -96,8 +104,8 @@ const main = async () => {
     )
 
     console.log(result);
-    exportToJson(result);
-    // exportToCsv(result);
+    // exportToJson(result);
+    exportToCsv(result);
 }
 
 main();
