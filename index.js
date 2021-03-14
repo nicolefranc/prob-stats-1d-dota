@@ -6,10 +6,10 @@ require('dotenv').config();
 const url = 'https://api.opendota.com/api';
 var config = {
   method: 'get',
-  headers: { 
-    'Authorization': `Bearer ${process.env.API_KEY}`, 
-    'Cookie': '__cfduid=d9ce592503b0824fdf014b2f188b6550e1615347910'
-  }
+//   headers: { 
+//     'Authorization': `Bearer ${process.env.API_KEY}`, 
+//     'Cookie': '__cfduid=d9ce592503b0824fdf014b2f188b6550e1615347910'
+//   }
 };
 
 const getMatchIds = async () => {
@@ -28,6 +28,7 @@ const getGold = async (matchId) => {
     config.url = `${url}/matches/${matchId}`;
     let response = await axios(config)
     const duration = response.data.duration; // seconds
+    const winner = response.data.radiant_win ? "radiant" : "dire";
     const durationInMins = duration / 60;
     const players = response.data.players;
     const radiant = players.filter(player => player.isRadiant);
@@ -73,6 +74,9 @@ const getGold = async (matchId) => {
         'Total Gold per minute': total / durationInMins,
         'Radiant\'s Gold per minute (Neutral Camp)': radiantNc / durationInMins,
         'Dire\'s Gold per minute (Neutral Camp)': direNc / durationInMins,
+        'RNC / Total Gold': radiantNc / total,
+        'DNC / Total Gold': direNc / total,
+        'Winner': winner,
     }
     return gold;
 }
@@ -93,15 +97,18 @@ const exportToCsv = (data) => {
 const main = async () => {
     let matchIds = await getMatchIds();
 
+    let usableMatches = matchIds.slice(50);
     let result = [];
 
     await Promise.all(
-        matchIds.map(async (matchId) => {
+        usableMatches.map(async (matchId) => {
             let gold = await getGold(matchId);
             result = [...result, gold];
             return result;
         })
-    )
+    ).catch((e) => {
+        console.error(e);
+    })
 
     console.log(result);
     // exportToJson(result);
